@@ -4,7 +4,7 @@
 
 \definecolor{dkist1}{RGB}{252,164,30}
 \definecolor{dkist2}{RGB}{234,109,28}
-\definecolor{dkist3}{RGB}{12,36,112}
+\definecolor{dkist3}{RGB}{12,36,113}
 
 \usepackage{fontspec}
 % \setmainfont[Ligatures=TeX]{Georgia}
@@ -13,6 +13,8 @@
 \renewcommand{\familydefault}{\sfdefault}
 
 \usepackage{minted}
+\setminted[pycon]{autogobble}
+\setminted[python]{autogobble}
 
 \begin{document}
 
@@ -40,7 +42,7 @@
    \includegraphics[height=0.08\textheight]{dkistlogo.jpg}
  }
  % Title
- {\sc\Huge DKIST User Tools for Level 1 Data}
+ {\sc\Huge User Tools for Level 1 DKIST Data}
  % Authors
  {Stuart J. Mumford$^{2,1}$, Fraser Watson$^{1}$, Alisdair Davey$^{1}$\\
  {\footnotesize{1. National Solar Observatory, 2. University of Sheffield}}}
@@ -72,70 +74,122 @@
 
 \begin{posterbox}[name=dataset,column=0,row=0,span=1,below=intro]{DKIST Datasets}
 
-  The Level 1 data products provided by the DKIST data centre will be FITS files
-  compliant with the FITS 4.0 specification. Each level 1 FITS file will be a
-  single ``calibrated frame'', for example for the VISP slit spectrograph it
-  would be a two dimensional space-wavelength array. This means every dataset
-  will be comprised of many tens or hundreds of FITS files.
+  Level 1 DKIST data will be provided as ``datasets'' which divide the data up
+  into observations from one instrument and one pass band from one observing
+  program.
 
-  The user tools expose the individual frames:
+  These datasets will be divided into many individual FITS files, such that each
+  is a single ``calibrated frame'', for example for the VISP slit spectrograph
+  each FITS file would be a two dimensional space-wavelength array. This means
+  every dataset will be comprised of many tens or hundreds of FITS files.
 
-  \includegraphics[width=0.98\textwidth]{sequence_of_images.png}
-
-  as a single contiguous cube:
-
+  One of the primary functions of the user tools expose these individual frames
+  as a contiguous cube without rewriting the data or having to open the files
+  until the array values need to be read.\\
+  
   \begin{center}
-    \includegraphics[width=0.49\textwidth]{cube.png}
+    \includegraphics[width=0.75\textwidth]{sequence_and_cube.png}\\[0.4em]
   \end{center}
 
-  without rewriting the data or having to open the files until the array values
-  need to be read.
+  This is achieved by the use of an Advanced Scientific Data Format (asdf) file
+  which contains all the metadata for the dataset. This asdf file contains:
+  \begin{itemize}
+    \item The ordering information for the FITS files.
+    \item A copy of all the FITS headers for all files in the dataset.
+    \item A World Coordinate System for the whole reconstructed dataset.
+    \item Some additional metadata about the dataset.
+  \end{itemize}
   
 \end{posterbox}
 
 \begin{posterbox}[name=dask,column=1,row=0,span=1,below=intro]{Dask}
-  Dask is a Python library for very large datasets and parallel computation.
-  While using it for DKIST data will provide users lots of potential for
-  paralell computation with applications on HPC and cloud computing, the main
-  motivation for using it is it's excellent support for arrays distributed over
-  many files.
-
-  The Level 1 DKIST data can construct a Dask array of all the FITS files which
-  comprise a dataset by reading an Advanced Scientific Data Format (asdf) file
-  which contains all the metadata for the whole dataset, but none of the arrays.
   
-  \begin{minted}[xleftmargin=-15pt,fontsize=\small]{python}
-    arr = arr[2:-2]
-    arr = np.min(arr, axis=0)
-    arr.visualize(optimize_graph=False)
+  Dask is a Python library for larger than memory and distributed computation.
+  The DKIST user tools are utilising dask as a core component to enable the on
+  demand loading of data from many FITS files. Representing the dataset as a Dask
+  array also provides users lots of potential for parallel computation on a
+  variety of hardware from laptops to HPC and cloud computing.
+
+  The Level 1 DKIST data constructs a multi-dimensional array of all the frames
+  in a dataset reading the metadata from the datasets asdf file.
+  
+  \begin{minted}[fontsize=\small]{pycon}
+    >>> arr = arr[2:-2]
+    >>> arr = np.min(arr, axis=0)
+    >>> arr.visualize(optimize_graph=False)
   \end{minted}
 
   \begin{center}
     \includegraphics[width=0.6\textwidth]{mydask.png}
   \end{center}
 
-  When doing operations on a Dask array, a graph of operations is generated, and
-  only when the values of array are required is the graph executed. This means
-  that complex operations can be done on a large distributed, multi-dimensional
-  dataset, but then the computation can only be done on a single frame at
-  visualisation or analysis time.
+  As shown above, when doing operations on a Dask array, a graph of operations
+  is generated, and only when the values of array are required is the graph
+  executed. This means that complex operations can be done on a large distributed,
+  multi-dimensional dataset, but then the computation can only be done on the
+  minimum number of frames at visualisation or analysis time.
 
 \end{posterbox}
  
 \begin{posterbox}[name=dataset,column=2,row=0,span=2]{Loading a Dataset}
- 
-  \begin{minted}[xleftmargin=-15pt,fontsize=\small]{python}
-   >>> from dataset import Dataset
 
-   >>> ds = Dataset.from_directory('~/dkist_data/ae43ghig/')
-   >>> ds
-   <dkist.dataset.dataset.Dataset object at 0x7f3245c965c0>
-   dask.array<stack, shape=(4, 128, 19, 966, 980), dtype=float32,
-              chunksize=(1, 1, 1, 966, 980)>
-   WCS<pixel_axes_names=(stokes, scan number, wavelength position, spatial y, spatial x),
-       world_axes_names=(stokes, time, wavelength, latitude, longitude)>
+  The user tools load datasets from asdf files. If the FITS files referenced
+  by the asdf file are not present, the dataset can still be loaded and the
+  metadata explored.
+ 
+  \begin{minted}[fontsize=\small]{pycon}
+    >>> from dataset import Dataset
+
+    >>> ds = Dataset.from_asdf("VTF_20450812T090801.asdf")
+    >>> ds
+    <dkist.dataset.dataset.Dataset object at 0x7f3245c965c0>
+    dask.array<stack, shape=(4, 128, 19, 966, 980), dtype=float32, chunksize=(1, 1, 1, 966, 980)>
+    WCS<pixel_axes_names=(stokes, scan number, wavelength position, spatial y, spatial x),
+        world_axes_names=(stokes, time, wavelength, latitude, longitude)>
   \end{minted}
 
+  This facilitates the inspection and subsetting of the dataset before having to
+  transfer the large arrays. This can be used to only transfer subsets of the
+  whole dataset, for example, only Stokes I or a specific time window. Only
+  whole FITS files can be transferred as there is no processing before download
+  at the data center.
+
+  In the example below we select the 0th stokes profile (I) and the 50th
+  wavelength scan from the dataset:
+  
+  \begin{minted}[fontsize=\small]{pycon}
+    >>> partial = ds[0,50]
+    >>> partial
+    <dkist.dataset.dataset.Dataset object at 0x7f1a40215c88>
+    dask.array<getitem, shape=(19, 966, 980), dtype=float32, chunksize=(1, 966, 980)>
+    WCS<pixel_axes_names=(wavelength position, spatial y, spatial x),
+        world_axes_names=(wavelength, latitude, longitude)>
+  \end{minted}
+
+  This subset can then be downloaded, only transferring 19 FITS files out of a
+  total of 9728.
+
+  \begin{minted}[fontsize=\small]{pycon}
+    >>> partial.download()
+  \end{minted}
+
+  
+\end{posterbox}
+
+\begin{posterbox}[name=scipy,column=2,row=0,span=1,below=dataset]{Plotting}
+
+  A dataset object is able to display a summary plot for all dimensionalities of
+  data. Here we plot our original five dimensional dataset, and three sliders
+  are displayed, for wavelength, time and stokes profile.
+
+  \begin{minted}[fontsize=\small]{pycon}
+      >>> ds.plot()
+  \end{minted}
+
+  \begin{center}
+    \includegraphics[width=0.65\textwidth]{5d-animator.png}
+  \end{center}
+  
 \end{posterbox}
 
 \begin{posterbox}[name=scipy,column=3,row=0,span=1,below=dataset]{Scientific Python}
@@ -150,7 +204,6 @@
   ones are Dask, SunPy, Astropy and matplotlib.
 
 \end{posterbox}
-
 
 \end{poster}
 \end{document}
