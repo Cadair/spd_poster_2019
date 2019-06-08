@@ -24,8 +24,8 @@
  % Column spacing
  colspacing=0.7em,
  % Color style
- headerColorOne=dkist2,
  borderColor=dkist1,
+ headerColorOne=dkist2,
  headerFontColor=dkist3,
  % Format of textbox
  textborder=faded,
@@ -81,18 +81,20 @@
   These datasets will be divided into many individual FITS files, such that each
   is a single ``calibrated frame'', for example for the VISP slit spectrograph
   each FITS file would be a two dimensional space-wavelength array. This means
-  every dataset will be comprised of many tens or hundreds of FITS files.
+  every dataset will be comprised of many tens or hundreds of thousands of FITS
+  files.
 
-  One of the primary functions of the user tools expose these individual frames
-  as a contiguous cube without rewriting the data or having to open the files
-  until the array values need to be read.\\
+  One of the primary functions of the user tools is to expose these individual
+  frames as a contiguous cube without rewriting the data or having to open the
+  files until the array values need to be read.
   
   \begin{center}
     \includegraphics[width=0.75\textwidth]{sequence_and_cube.png}\\[0.4em]
   \end{center}
 
-  This is achieved by the use of an Advanced Scientific Data Format (asdf) file
-  which contains all the metadata for the dataset. This asdf file contains:
+  To make this more efficient an Advanced Scientific Data Format (asdf) file
+  containing all the metadata is provided for each dataset. This asdf file
+  contains:
   \begin{itemize}
     \item The ordering information for the FITS files.
     \item A copy of all the FITS headers for all files in the dataset.
@@ -198,10 +200,12 @@
   which specialise in different functionality. The objective of the DKIST user
   tools is to enable the use of this ecosystem with DKIST data.
   
-  \includegraphics[width=0.98\textwidth]{scipy-stack.png}
+  \includegraphics[width=0.98\textwidth]{scipy-stack.png}\\[0.1em]
 
-  The DKIST user tools uses a large number of these different packages, the main
-  ones are Dask, SunPy, Astropy and matplotlib.
+  The DKIST user tools uses a large number of these different packages, to
+  provide interoperability with the whole ecosystem the key packages used are Dask
+  for the array, matplotlib for visualisation, SunPy and Astropy for coordinate
+  transformations and units, and gWCS for representation of the world coordinates.
 
 \end{posterbox}
 
