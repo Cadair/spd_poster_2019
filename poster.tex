@@ -1,13 +1,14 @@
-\documentclass[landscape,a0paper,fontscale=0.32]{baposter}
+\documentclass[a0paper,landscape,fontscale=0.3]{baposter}
 
 \graphicspath{{images/}}
 
 \definecolor{dkist1}{RGB}{252,164,30}
 \definecolor{dkist2}{RGB}{234,109,28}
-\definecolor{dkist3}{RGB}{12,36,113}
+\definecolor{dkist3}{RGB}{11,17,130}
+\usepackage{enumitem}
+\setlist{noitemsep} % or \setlist{noitemsep} to leave space around whole list
 
 \usepackage{fontspec}
-% \setmainfont[Ligatures=TeX]{Georgia}
 \setsansfont{Roboto}
 \setmonofont{Source Code Pro}
 \renewcommand{\familydefault}{\sfdefault}
@@ -15,6 +16,10 @@
 \usepackage{minted}
 \setminted[pycon]{autogobble}
 \setminted[python]{autogobble}
+
+\tolerance=1
+\hyphenpenalty=10000
+\hbadness=10000
 
 \begin{document}
 
@@ -33,13 +38,13 @@
  headerborder=open,
  headershape=rectangle,
  headershade=plain,
- headerheight=0.12\textheight,
- headerfont={\bfseries},
+ headerheight=0.15\textheight,
+ headerfont={\bf\large},
  background=none
  }
  % Eye Catcher
  {
-   \includegraphics[height=0.08\textheight]{dkistlogo.jpg}
+   \includegraphics[height=0.08\textheight]{NSOlogo_transparent.png}
  }
  % Title
  {\sc\Huge User Tools for Level 1 DKIST Data}
@@ -59,6 +64,11 @@
   by the scientific community. In addition to this a set of Python tools are
   being developed to facilitate the use of these data.
 
+  Due to the very high data rates for level 1 data (over 2 Petabytes per year)
+  these data provide a new set of challenges for both the data center and the
+  users of the data. The user tools aim to provide easy access to the level one
+  data in Python.
+
   The main features of the user tools will be:
   \begin{itemize}
   \item Dataset search.
@@ -69,7 +79,6 @@
     data.
   \end{itemize}
 
-  
 \end{posterbox}
 
 \begin{posterbox}[name=dataset,column=0,row=0,span=1,below=intro]{DKIST Datasets}
@@ -89,7 +98,7 @@
   files until the array values need to be read.
   
   \begin{center}
-    \includegraphics[width=0.75\textwidth]{sequence_and_cube.png}\\[0.4em]
+    \includegraphics[width=0.6\textwidth]{sequence_and_cube.png}\\[0.4em]
   \end{center}
 
   To make this more efficient an Advanced Scientific Data Format (asdf) file
@@ -107,13 +116,10 @@
 \begin{posterbox}[name=dask,column=1,row=0,span=1,below=intro]{Dask}
   
   Dask is a Python library for larger than memory and distributed computation.
-  The DKIST user tools are utilising dask as a core component to enable the on
-  demand loading of data from many FITS files. Representing the dataset as a Dask
-  array also provides users lots of potential for parallel computation on a
-  variety of hardware from laptops to HPC and cloud computing.
-
-  The Level 1 DKIST data constructs a multi-dimensional array of all the frames
-  in a dataset reading the metadata from the datasets asdf file.
+  The DKIST user tools are utilising dask to enable the on demand loading of data
+  from many FITS files. Representing the dataset as a Dask array also provides
+  users lots of potential for parallel computation on a variety of hardware from
+  laptops to HPC or cloud computing.
   
   \begin{minted}[fontsize=\small]{pycon}
     >>> arr = arr[2:-2]
@@ -122,14 +128,13 @@
   \end{minted}
 
   \begin{center}
-    \includegraphics[width=0.6\textwidth]{mydask.png}
+    \includegraphics[width=0.65\textwidth]{mydask.png}
   \end{center}
 
   As shown above, when doing operations on a Dask array, a graph of operations
   is generated, and only when the values of array are required is the graph
   executed. This means that complex operations can be done on a large distributed,
-  multi-dimensional dataset, but then the computation can only be done on the
-  minimum number of frames at visualisation or analysis time.
+  multi-dimensional dataset, while opening the minimum number of files.
 
 \end{posterbox}
  
@@ -139,7 +144,7 @@
   by the asdf file are not present, the dataset can still be loaded and the
   metadata explored.
  
-  \begin{minted}[fontsize=\small]{pycon}
+  \begin{minted}[fontsize=\footnotesize]{pycon}
     >>> from dataset import Dataset
 
     >>> ds = Dataset.from_asdf("VTF_20450812T090801.asdf")
@@ -159,7 +164,7 @@
   In the example below we select the 0th stokes profile (I) and the 50th
   wavelength scan from the dataset:
   
-  \begin{minted}[fontsize=\small]{pycon}
+\begin{minted}[fontsize=\footnotesize]{pycon}
     >>> partial = ds[0,50]
     >>> partial
     <dkist.dataset.dataset.Dataset object at 0x7f1a40215c88>
@@ -171,7 +176,7 @@
   This subset can then be downloaded, only transferring 19 FITS files out of a
   total of 9728.
 
-  \begin{minted}[fontsize=\small]{pycon}
+\begin{minted}[fontsize=\footnotesize]{pycon}
     >>> partial.download()
   \end{minted}
 
@@ -189,7 +194,7 @@
   \end{minted}
 
   \begin{center}
-    \includegraphics[width=0.65\textwidth]{5d-animator.png}
+    \includegraphics[width=0.60\textwidth]{5d-animator.png}
   \end{center}
   
 \end{posterbox}
@@ -200,7 +205,7 @@
   which specialise in different functionality. The objective of the DKIST user
   tools is to enable the use of this ecosystem with DKIST data.
   
-  \includegraphics[width=0.98\textwidth]{scipy-stack.png}\\[0.1em]
+  \includegraphics[width=0.8\textwidth]{scipy-stack.png}\\[0.1em]
 
   The DKIST user tools uses a large number of these different packages, to
   provide interoperability with the whole ecosystem the key packages used are Dask
